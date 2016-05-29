@@ -37,21 +37,22 @@ public class CubeTile {
 
         for (x = 0; x < XX; x++) {
             for (y = 0; y < YY; y++) {
-                for (int i = 0; i < shape_type[0].length; i++) {
+                for (int i = 0; i < 6; i++) {
                     int src_x = x + (shape_type[0][i] & 1);
                     int src_y = y + (shape_type[0][i] & 2) / 2;
                     int src_z = 0 + (shape_type[0][i] & 4) / 4;
-                    vf[(((x * YY) + y) * shape_type.length + i) * 3 + 0] = Util.get2dx(src_x, src_y, src_z) - mScrollX;
-                    vf[(((x * YY) + y) * shape_type.length + i) * 3 + 1] = Util.get2dy(src_x, src_y, src_z) - mScrollY;
-                    vf[(((x * YY) + y) * shape_type.length + i) * 3 + 2] = 0;
+                    vf[(((x * YY) + y) * 6 + i) * 3 + 0] = Util.get2dx(src_x, src_y, src_z) - mScrollX;
+                    vf[(((x * YY) + y) * 6 + i) * 3 + 1] = Util.get2dy(src_x, src_y, src_z) - mScrollY;
+                    vf[(((x * YY) + y) * 6 + i) * 3 + 2] = 0;
 
-                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 0] = 0.2f;
-                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 1] = 0.4f;
-                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 2] = 0.7f;
-                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 3] = 1.0f;
+                    cf[(((x * YY) + y) * 6 + i) * 4 + 0] = 0.2f;
+                    cf[(((x * YY) + y) * 6 + i) * 4 + 1] = 0.4f;
+                    cf[(((x * YY) + y) * 6 + i) * 4 + 2] = 0.7f;
+                    cf[(((x * YY) + y) * 6 + i) * 4 + 3] = 1.0f;
                 }
             }
         }
+        Log.i("draw", Arrays.toString(vf));
 
         vb = Util.setFloatBuffer(vf);
         cb = Util.setFloatBuffer(cf);

@@ -16,6 +16,8 @@ public class Pos {
     public float vy;
     public float vz;
 
+    public Pos() {
+    }
     public Pos(int x, int y, int z) {
         this.set(x,y,z);
     }

@@ -20,4 +20,10 @@ public class Util {
         return dst;
     }
 
+    static public float get2dx(int x, int y,int z) {
+        return (x - y) * Pos.Q_LEN * 4;
+    }
+    static public float get2dy(int x, int y,int z) {
+        return ((x + y)*2+z) * Pos.Q_LEN;
+    }
 }

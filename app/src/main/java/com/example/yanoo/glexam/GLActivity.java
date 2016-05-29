@@ -8,7 +8,6 @@ import android.util.Log;
 public class GLActivity extends Activity {
     private GLSurfaceView mGLView;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
