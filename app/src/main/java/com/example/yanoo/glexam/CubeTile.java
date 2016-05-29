@@ -16,9 +16,9 @@ public class CubeTile {
     public float  mScrollY = 0;
 
     private static final int[][] shape_type= {
-            {2,0,3,1},
-            {6,2,7,3},
-            {7,3,5,1},
+            {2,0,3,1,3,0},
+            {6,2,7,3,7,2},
+            {7,3,5,1,5,3},
     };
     private static final float[][] shape_color= {
             {0.2f, 0.3f,0.7f},
@@ -29,6 +29,44 @@ public class CubeTile {
     public void draw(GL10 gl) {
         int x;
         int y;
+        int XX = 2;
+        int YY = 2;
+        float vf[] = new float[6*XX*YY*3];
+        float cf[] = new float[6*XX*YY*4];
+        FloatBuffer cb= null, vb = null;
+
+        for (x = 0; x < XX; x++) {
+            for (y = 0; y < YY; y++) {
+                for (int i = 0; i < shape_type[0].length; i++) {
+                    int src_x = x + (shape_type[0][i] & 1);
+                    int src_y = y + (shape_type[0][i] & 2) / 2;
+                    int src_z = 0 + (shape_type[0][i] & 4) / 4;
+                    vf[(((x * YY) + y) * shape_type.length + i) * 3 + 0] = Util.get2dx(src_x, src_y, src_z) - mScrollX;
+                    vf[(((x * YY) + y) * shape_type.length + i) * 3 + 1] = Util.get2dy(src_x, src_y, src_z) - mScrollY;
+                    vf[(((x * YY) + y) * shape_type.length + i) * 3 + 2] = 0;
+
+                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 0] = 0.2f;
+                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 1] = 0.4f;
+                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 2] = 0.7f;
+                    cf[(((x * YY) + y) * shape_type.length + i) * 4 + 3] = 1.0f;
+                }
+            }
+        }
+
+        vb = Util.setFloatBuffer(vf);
+        cb = Util.setFloatBuffer(cf);
+
+        gl.glColorPointer  (4, GL10.GL_FLOAT, 0, cb);
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vb);
+
+        gl.glDrawArrays(GL10.GL_TRIANGLES, 0, vf.length / 3);
+    }
+    public void draw2(GL10 gl) {
+        int x;
+        int y;
+        for (int i = 0; i < locs.length; i++) {
+            locs[i] = new Pos();
+        }
         for (x = 0; x < 16; x++) {
             for (y = 0; y < 16; y++) {
                 drawShape(gl, x,y,0,0);
@@ -39,11 +77,11 @@ public class CubeTile {
         drawShape(gl, 3,0,-1,2);
     }
 
-    public void drawShape(GL10 gl, int x, int y, int z, int type) {
-        Pos[] locs = new Pos[4];
+    Pos[] locs = new Pos[4];
 
+    public void drawShape(GL10 gl, int x, int y, int z, int type) {
         for (int i = 0; i < locs.length; i++) {
-            locs[i] = new Pos(
+            locs[i].set(
                     x + (shape_type[type][i] & 1),
                     y + (shape_type[type][i] & 2)/2,
                     z + (shape_type[type][i] & 4)/4);
