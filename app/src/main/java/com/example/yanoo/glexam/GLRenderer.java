@@ -10,6 +10,7 @@ import android.util.Log;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -18,13 +19,19 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by Yanoo on 2016. 5. 25..
  */
 public class GLRenderer implements GLSurfaceView.Renderer{
-    private static final int    TEX_NUM = 4;
-    private              int[]  texture = new int[TEX_NUM];
-    private              Context mContext;
+    private static final int      TEX_NUM = 4;
+
+    private              int[]    texture = new int[TEX_NUM];
+    private              Context  mContext;
+    private              CubeTile mCubeTile = new CubeTile();
 
     public GLRenderer(Context context) {
         super();
         mContext = context;
+    }
+
+    public CubeTile getCubeTile() {
+        return mCubeTile;
     }
 
     public void init(GL10 gl, Context context) {
@@ -72,7 +79,7 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         gl.glViewport(0, 0, w, h);         // ViewPort 리셋
         gl.glMatrixMode(GL10.GL_PROJECTION);        // MatrixMode를 Project Mode로
         gl.glLoadIdentity();                        // Matrix 리셋
-        gl.glOrthof(0, 480, 800, 0, 1, -1);
+        gl.glOrthof(0, w, h, 0, 1, -1);
         gl.glMatrixMode(GL10.GL_MODELVIEW);         // Matrix를 ModelView Mode로 변환
         gl.glLoadIdentity();                        // Matrix 리셋
     }
@@ -82,22 +89,16 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();                        // Matrix 리셋
 
+        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+        gl.glDisable(GL10.GL_TEXTURE_2D);
         gl.glFrontFace(GL10.GL_CW);     // 시계방향 그리기 설정
-        setVerticesAndDraw(gl);
-        Log.i("!!", "draw");
+
+        mCubeTile.draw(gl);
+//        setVerticesAndDraw(gl);
+//        Log.i("!!", "draw");
     }
 
-    private FloatBuffer setFloatBuffer(float[] src) {
-        FloatBuffer dst;
-
-        ByteBuffer byteBuf = ByteBuffer.allocateDirect(src.length * 4);
-        byteBuf.order(ByteOrder.nativeOrder());
-        dst = byteBuf.asFloatBuffer();
-        dst.put(src);
-        dst.position(0);
-
-        return dst;
-    }
 
     public void setVerticesAndDraw( GL10 gl) {
         FloatBuffer m_vertexBuffer = null;
@@ -105,7 +106,7 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         float vertices[] = { 0.0f, 0.0f, 0.0f,
                 240.0f, 800.0f, 0.0f,
                 480.0f, 0.0f, 0.0f, };
-        m_vertexBuffer= setFloatBuffer(vertices);
+        m_vertexBuffer= Util.setFloatBuffer(vertices);
 
         /*
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, m_vertexBuffer);
@@ -126,8 +127,8 @@ public class GLRenderer implements GLSurfaceView.Renderer{
                 1.0f, 1.0f,
                 1.0f, 0.0f,
         };
-        tb = setFloatBuffer(tf);
-        vb = setFloatBuffer(vf);
+        tb = Util.setFloatBuffer(tf);
+        vb = Util.setFloatBuffer(vf);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
