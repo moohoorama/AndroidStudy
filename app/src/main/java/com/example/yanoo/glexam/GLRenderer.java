@@ -20,11 +20,17 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class GLRenderer implements GLSurfaceView.Renderer{
     private TopTexture mTopTexture;
+    private CubeTile   mCubeTile;
     private int mWidth = 1;
     private int mHeight = 1;
 
     public GLRenderer(Context context) {
         mTopTexture = new TopTexture();
+        mCubeTile = new CubeTile();
+    }
+
+    public CubeTile getCubeTile() {
+        return mCubeTile;
     }
 
     @Override
@@ -53,11 +59,22 @@ public class GLRenderer implements GLSurfaceView.Renderer{
 
     @Override
     public void onDrawFrame(GL10 gl) {
+        Stopwatch sw = new Stopwatch();
+
         gl.glClearColor(0, 0, 0, 1.0f);
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();                        // Matrix 리셋
 
+        sw.event("clear");
         mTopTexture.testAct();
+        sw.event("act");
+
+        for (int yy = 0; yy < 16; yy ++) {
+            for (int xx=0; xx < 16; xx++) {
+                mCubeTile.drawShape(xx,yy,0,0);
+            }
+        }
+        sw.event("tile");
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
@@ -73,6 +90,8 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
         gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+        sw.event("draw");
+        Log.i("draw", sw.toString());
     }
 
     public void setTexture(GL10 gl, int id, Bitmap bitmap) {
@@ -80,40 +99,5 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
         gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
         GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
-    }
-
-    public void drawRect(GL10 gl, int id, float x, float y, float w, float h, float r, float g, float b) {
-        FloatBuffer vb=null, cb=null, tb=null;
-        float[] vf = {
-                x, y + h, 0.0f,
-                x, y, 0.0f,
-                x + w, y + h, 0.0f,
-                x + w, y, 0.0f,
-        };
-        float[] cf = {
-                /* ld, lt, rd rt */
-                r*0.9f, g*0.9f, b*0.9f, 1.0f,
-                r*1.0f, g*1.0f, b*1.0f, 1.0f,
-                r*0.7f, g*0.7f, b*0.7f, 1.0f,
-                r*0.8f, g*0.8f, b*0.8f, 1.0f,
-        };
-        float[] tf = {
-                0.0f, 1.0f,
-                0.0f, 0.0f,
-                1.0f, 1.0f,
-                1.0f, 0.0f,
-        };
-        vb = Util.setFloatBuffer(vf);
-        tb = Util.setFloatBuffer(tf);
-        cb = Util.setFloatBuffer(cf);
-
-
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vb);
-        gl.glColorPointer  (4, GL10.GL_FLOAT, 0, cb);
-        gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, tb);
-        gl.glBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, id); /* background */
-
-        gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, vf.length / 3);
     }
 }

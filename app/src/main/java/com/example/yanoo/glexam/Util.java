@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Yanoo on 2016. 5. 29..
@@ -22,10 +23,17 @@ public class Util {
         return dst;
     }
 
-    static public FloatBuffer setFloatBufferFromArrayList(ArrayList<Float> src) {
-        float []med = new float[src.size()];
-
-        for  (int idx = 0; idx < src.size(); idx++)  med[idx] = src.get(idx);
+    static public FloatBuffer setFloatBufferFromList(List<float[]> src) {
+        int   size = 0;
+        for (float[] val: src) {
+            size += val.length;
+        }
+        float []med = new float[size];
+        int   idx = 0;
+        for (float[] arr: src) {
+            System.arraycopy(arr,0,med,idx,arr.length);
+            idx += arr.length;
+        }
 
         FloatBuffer dst;
         ByteBuffer byteBuf = ByteBuffer.allocateDirect(med.length * 4);
