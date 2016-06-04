@@ -32,7 +32,7 @@ public class MainGLSurfaceView extends GLSurfaceView implements ScaleGestureDete
                     mClickY = event.getY();
                 }
                 //Log.i("Touch", String.format("%d %d %d %d", event.getAction(), event.ACTION_UP, event.ACTION_DOWN, event.ACTION_HOVER_MOVE));
-//                mRenderer.getCubeTile().dragXY(mClickX - event.getX(), mClickY - event.getY());
+                mRenderer.getCubeTile().dragXY(mClickX - event.getX(), mClickY - event.getY());
                 mClickX = event.getX();
                 mClickY = event.getY();
                 requestRender();
