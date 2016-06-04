@@ -194,7 +194,7 @@ public class TopTexture {
         }
         topBitmap.eraseColor(Color.TRANSPARENT);
         depth = -0.0001f;
-        Log.i("stopwatch", stopwatch.toString());
+        Log.d("stopwatch", stopwatch.toString());
     }
 
     float x = 50;
@@ -224,7 +224,6 @@ public class TopTexture {
         textPaint.getTextBounds(msg,0,msg.length(), bound);
         textPaint.setARGB( 0xff, 0x7f, 0x7f, 0x7f );
         canvas.drawRect(200,100,700,600,textPaint);
-        Log.i("Act",msg);
 
         textPaint.setARGB( 0xff, 0xff, 0xff, 0xff );
 //        canvas.drawBitmap(bitmap_i1, null, new Rect(0,0,1024,1024), textPaint);

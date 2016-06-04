@@ -11,7 +11,7 @@
         android:theme="@style/AppTheme">
         <activity android:name="GLActivity"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:screenOrientation="portrait"
+            android:screenOrientation="sensorLandscape"
             android:launchMode="singleTask"
             android:configChanges="orientation|keyboardHidden"
             >

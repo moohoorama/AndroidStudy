@@ -69,9 +69,9 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         mTopTexture.testAct();
         sw.event("act");
 
-        for (int yy = 0; yy < 16; yy ++) {
-            for (int xx=0; xx < 16; xx++) {
-                mCubeTile.drawShape(xx,yy,0,0);
+        for (int yy = 0; yy < 32; yy ++) {
+            for (int xx=0; xx < 32; xx++) {
+                mCubeTile.drawShape(mWidth,mHeight,xx,yy,0,0);
             }
         }
         sw.event("tile");
@@ -91,7 +91,7 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
         gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         sw.event("draw");
-        Log.i("draw", sw.toString());
+        Log.d("draw", sw.toString());
     }
 
     public void setTexture(GL10 gl, int id, Bitmap bitmap) {
