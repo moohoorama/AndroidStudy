@@ -4,15 +4,13 @@ import android.app.Activity;
 import android.graphics.Typeface;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 public class GLActivity extends Activity {
     private GLSurfaceView mGLView;
-    static public GLActivity   mSingletone;
-    static private Typeface      mTF;
 
     public GLActivity() {
-        mSingletone = this;
     }
 
     @Override
@@ -21,10 +19,6 @@ public class GLActivity extends Activity {
 
         mGLView = new MainGLSurfaceView(this);
         setContentView(mGLView);
-    }
-
-    public Typeface createTF() {
-        return Typeface.createFromAsset(getAssets(), "fonts/NanumBarunGothic.ttf");
     }
 
     @Override

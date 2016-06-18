@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">GLExam</string>
+    <string name="app_name">GLExample</string>
+    <string name="Up">위</string>
+    <string name="Down">아래</string>
+    <string name="Left">왼쪽</string>
+    <string name="Right">오른쪽</string>
+    <string name="Check">확인</string>
+    <string name="Load">불러오기</string>
+    <string name="Save">저장하기</string>
 </resources>

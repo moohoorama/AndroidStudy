@@ -1,87 +1,80 @@
 package com.example.yanoo.glexam;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
+import android.widget.Toast;
+
+import com.example.yanoo.glexam.graphic.GLRenderer;
 
 public class MainGLSurfaceView extends GLSurfaceView {
     public static MainGLSurfaceView sSingletone;
-    GLRenderer           mRenderer;
-    MediaPlayer          mMediaPlayer;
+
+    Activity             activity;
+    GLRenderer           renderer;
+    MediaPlayer          mediaPlayer;
     SoundPool            mSoundPool;
-    int[]               mSoundIdx;
+    int[]                mSoundIdx;
+    DisplayMetrics       mMetrics = new DisplayMetrics();
+    Handler              handler = new Handler(Looper.getMainLooper());
 
-    public MainGLSurfaceView(Context context) {
-        super(context);
+    public void toast(final String msg) {
+        handler.post(new Runnable(){
+            public void run() {
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show();
+/*
+                Toast toast=Toast.makeText(activity, msg, Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER, 0, 0);
+                toast.show();*/
+            }});
+    }
 
-        sSingletone = this;
+    public String getBasePath() {
+        return activity.getFilesDir().getPath().toString();
+    }
 
-        mRenderer = new GLRenderer(context);
-        setRenderer(mRenderer);
+    public MainGLSurfaceView(Activity activity) {
+        super(activity);
+        activity.getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
+
+        this.activity = activity;
+        sSingletone   = this;
+
+        if (GLRenderer.singletone == null) {
+            renderer=new GLRenderer(activity);
+        } else {
+            renderer=GLRenderer.singletone;
+        }
+        setRenderer(renderer);
 //        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
-        mMediaPlayer = MediaPlayer.create(context, R.raw.kalimba);
+//        mMediaPlayer = MediaPlayer.create(context, R.raw.kalimba);
 //        mMediaPlayer.start();
         mSoundPool =  new  SoundPool(5, AudioManager.STREAM_MUSIC, 0);
         mSoundIdx = new int[1];
-        mSoundIdx[0] = mSoundPool.load(context, R.raw.sword, 0);
+//        mSoundIdx[0] = mSoundPool.load(context, R.raw.sword, 0);
     }
 
-    float                mClickX, mClickY;
-    float                mBeginDistance = 0;
-
-    private float   getPointerDistance(final MotionEvent event) {
-        if (event.getPointerCount() < 2) {
-            return 0.0f;
-        }
-        return (float)Math.hypot(event.getX(1) - event.getX(0),event.getY(1) - event.getY(0));
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        renderer.getGameLogic().getTouchListener().setScreenSize(w,h);
     }
-
-    private int mouseMode = 0;
 
     public boolean onTouchEvent(final MotionEvent event) {
         queueEvent(new Runnable(){
             public void run() {
-                switch(event.getPointerCount()) {
-                    case 1:
-                        if (mouseMode <= 1) {
-                            if (event.getActionMasked() == event.ACTION_DOWN) {
-                                mClickX = event.getX();
-                                mClickY = event.getY();
-                                mSoundPool.play(mSoundIdx[0], 1.0f, 1.0f, 0, 0, 1.0f);
-                            } else {
-                                if (event.getActionMasked() == event.ACTION_MOVE) {
-                                    mRenderer.getCubeTile().dragXY(mClickX - event.getX(), mClickY - event.getY());
-                                    mClickX = event.getX();
-                                    mClickY = event.getY();
-                                }
-                            }
-                        }
-                        break;
-                    case 2:
-                        mouseMode = 2;
-                        if ((event.getActionMasked() & event.ACTION_POINTER_DOWN) != event.ACTION_POINTER_DOWN) {
-                            mScaleFactor += (getPointerDistance(event) - mBeginDistance) / 200.0f;
-                        }
-                        mScaleFactor = Math.max(1.0f, Math.min(5.0f, mScaleFactor));
-                        mBeginDistance = getPointerDistance(event);
-                        break;
-                }
-                if (event.getActionMasked() == event.ACTION_UP) {
-                    mouseMode = 0;
-                }
-                Log.i("mouse", String.format("%d %d %d", event.getActionMasked(), mouseMode, event.getPointerCount()));
-
-                // requestRender();
+                renderer.getGameLogic().getTouchListener().touch(event);
             }});
         return true;
     }
-    public float mScaleFactor = 1.0f;
 }
 
