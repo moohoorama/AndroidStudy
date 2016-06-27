@@ -1,9 +1,21 @@
 <resources>
+    <string name="error_title">Crashed</string>
+    <string name="error_comment">에러 코맨트</string>
+    <string name="error_toast">Critical Error!</string>
+    <string name="error_text">Crash - Sending error report via email.</string>
     <string name="app_name">GLExample</string>
+    <string name="Start">시작하기</string>
+    <string name="Setting">설정</string>
+    <string name="MapEditor">맵 에디터</string>
+    <string name="Exit">나가기</string>
+    <string name="UpStair">위층</string>
+    <string name="DownStair">아래층</string>
     <string name="Up">위</string>
     <string name="Down">아래</string>
     <string name="Left">왼쪽</string>
     <string name="Right">오른쪽</string>
+    <string name="Reset">초기화</string>
+    <string name="Height">높이</string>
     <string name="Check">확인</string>
     <string name="Load">불러오기</string>
     <string name="Save">저장하기</string>

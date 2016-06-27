@@ -1,7 +1,5 @@
 package com.example.yanoo.glexam.game;
 
-import android.graphics.Bitmap;
-import android.graphics.RectF;
 import android.util.Log;
 
 import com.example.yanoo.glexam.CubeTile;
@@ -9,8 +7,7 @@ import com.example.yanoo.glexam.MainGLSurfaceView;
 import com.example.yanoo.glexam.R;
 import com.example.yanoo.glexam.graphic.Pos;
 import com.example.yanoo.glexam.graphic.GLRenderer;
-import com.example.yanoo.glexam.graphic.TButton;
-import com.example.yanoo.glexam.graphic.TUI;
+import com.example.yanoo.glexam.graphic.ui.TButton;
 import com.example.yanoo.glexam.graphic.TextureManager;
 import com.example.yanoo.glexam.touch.NormalTouchListener;
 import com.example.yanoo.glexam.touch.TouchListener;
@@ -33,53 +30,52 @@ public class CubeDrawer implements GameLogic {
     }
 
     private Pos cursor = new Pos();
+    private int CubeLen = 16;
+    private int CubeMap[][][] = new int [CubeLen][CubeLen][CubeLen];
 
-    private int     CubeMap[][][] = new int [12][12][12];
-    private TButton left   = new TButton(0.0f, 0.8f, 0.2f, 0.9f, Util.getRString(R.string.Left), new TUI.TUIListener() {
-        @Override
-        public void press(TouchListener.TouchEvent tl) {
-            cursor.x--;
-        }
-        public void depress(TouchListener.TouchEvent tl) {}
-    });
-    private TButton right  = new TButton(0.4f, 0.8f, 0.6f, 0.9f, Util.getRString(R.string.Right), new TUI.TUIListener() {
-        @Override
-        public void press(TouchListener.TouchEvent tl) {
-                cursor.x++;
-        }
-        public void depress(TouchListener.TouchEvent tl) {}
-    });
-    private TButton top    = new TButton(0.2f, 0.7f, 0.4f, 0.8f,Util.getRString(R.string.Up), new TUI.TUIListener() {
-        @Override
-        public void press(TouchListener.TouchEvent tl) {
-                cursor.y--;
-        }
-        public void depress(TouchListener.TouchEvent tl) {}
-    });
-    private TButton bottom = new TButton(0.2f, 0.9f, 0.4f, 1.0f,Util.getRString(R.string.Down),  new TUI.TUIListener() {
-        @Override
-        public void press(TouchListener.TouchEvent tl) {
-                cursor.y++;
-        }
-        public void depress(TouchListener.TouchEvent tl) {}
-    });
-    private TButton center = new TButton(0.2f, 0.8f, 0.4f, 0.9f,Util.getRString(R.string.Check),  new TUI.TUIListener() {
-        @Override
-        public void press(TouchListener.TouchEvent tl) {
-            CubeMap[(int)cursor.z][(int)cursor.y][(int)cursor.x] =
-                    1 - CubeMap[(int)cursor.z][(int)cursor.y][(int)cursor.x];
-        }
-        public void depress(TouchListener.TouchEvent tl) {}
-    });
+    public void          registUI(final GLRenderer renderer) {
+        renderer.registTUI(new TButton(0.0f, 0.8f, 0.2f, 0.9f, Util.getRString(R.string.Left), new TButton.Listener() {
+            public void press(TouchListener.TouchEvent tl) {cursor.x--;}
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.4f, 0.8f, 0.6f, 0.9f, Util.getRString(R.string.Right), new TButton.Listener() {
+            public void press(TouchListener.TouchEvent tl) {cursor.x++;}
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.2f, 0.7f, 0.4f, 0.8f,Util.getRString(R.string.Up), new TButton.Listener() {
+            public void press(TouchListener.TouchEvent tl) {cursor.y--;}
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.2f, 0.9f, 0.4f, 1.0f,Util.getRString(R.string.Down),  new TButton.Listener() {
+            public void press(TouchListener.TouchEvent tl) {cursor.y++;}
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.0f, 0.7f, 0.2f, 0.8f,Util.getRString(R.string.UpStair), new TButton.Listener() {
+            public void press(TouchListener.TouchEvent tl) {cursor.z--;}
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.4f, 0.7f, 0.6f, 0.8f,Util.getRString(R.string.DownStair),  new TButton.Listener() {
+            public void press(TouchListener.TouchEvent tl) {cursor.z++;}
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.2f, 0.8f, 0.4f, 0.9f,Util.getRString(R.string.Check),  new TButton.Listener() {
+            @Override
+            public void press(TouchListener.TouchEvent tl) {
+                CubeMap[(int)cursor.z][(int)cursor.y][(int)cursor.x] =
+                        1 - CubeMap[(int)cursor.z][(int)cursor.y][(int)cursor.x];
+            }
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
+        renderer.registTUI(new TButton(0.6f, 0.7f, 0.8f, 0.8f,Util.getRString(R.string.Reset),  new TButton.Listener() {
+            @Override
+            public void press(TouchListener.TouchEvent tl) {
+                CubeMap = new int [CubeLen][CubeLen][CubeLen];
+            }
+            public void depress(TouchListener.TouchEvent tl) {}
+        }));
 
-    public void          registUI() {
-        GLRenderer.singletone.registTUI(left);
-        GLRenderer.singletone.registTUI(right);
-        GLRenderer.singletone.registTUI(top);
-        GLRenderer.singletone.registTUI(bottom);
-        GLRenderer.singletone.registTUI(center);
-        GLRenderer.singletone.registTUI(
-                new TButton(0.6f,0.8f,0.8f,0.9f, Util.getRString(R.string.Save), new TUI.TUIListener() {
+        renderer.registTUI(
+                new TButton(0.6f,0.8f,0.8f,0.9f, Util.getRString(R.string.Save), new TButton.Listener() {
                     @Override
                     public void press(TouchListener.TouchEvent tl) {
                         JSONObject obj = new JSONObject();
@@ -100,7 +96,7 @@ public class CubeDrawer implements GameLogic {
                             e.printStackTrace();
                         }
 
-                        String path =  "/map.json";
+                        String path =  "/cube.json";
                         Util.writeFile(path, obj.toString().getBytes());
                         MainGLSurfaceView.sSingletone.toast(path + " Save");
                         Log.i("Save", obj.toString());
@@ -111,11 +107,11 @@ public class CubeDrawer implements GameLogic {
                 })
         );
         GLRenderer.singletone.registTUI(
-                new TButton(0.8f,0.8f,1.0f,0.9f, Util.getRString(R.string.Load), new TUI.TUIListener() {
+                new TButton(0.8f,0.8f,1.0f,0.9f, Util.getRString(R.string.Load), new TButton.Listener() {
 
                     @Override
                     public void press(TouchListener.TouchEvent tl) {
-                        String path = "/map.json";
+                        String path = "/cube.json";
                         byte contents[] = Util.readFile(path);
                         if (contents == null) {
                             return;
@@ -166,11 +162,13 @@ public class CubeDrawer implements GameLogic {
             for (int y=0; y < CubeMap[z].length; y++) {
                 for (int x = 0; x < CubeMap[z][y].length; x ++) {
                     check = 0.0f;
-                    if (x == cursor.x && y == cursor.y && z == cursor.z) {
-                        check += 0.1f;
+                    if ((x == cursor.x && y == cursor.y) ||
+                        (y == cursor.y && z == cursor.z) ||
+                        (z == cursor.z && x == cursor.x)) {
+                        check = 0.2f;
                     }
                     if (CubeMap[z][y][x] > 0) {
-                        check+=0.3f;
+                        check = 1.0f;
                     }
                     if (check > 0.0f) {
                         mCubeTile.drawShape(tm,mTouchListener, x, y, z, 0, check);
@@ -181,11 +179,11 @@ public class CubeDrawer implements GameLogic {
             }
         }
 
+        /*
         tm.addText('l',50, 50, "frame", 64, 1.0f,1.0f,1.0f,1.0f);
         tm.addText('l',50, 150, "abcd", 64, 1.0f,1.0f,1.0f,1.0f);
         tm.addText('l',50, 250, "위", 128, 1.0f,1.0f,1.0f,1.0f);
         tm.addTextureRect(0,new RectF(0,0,512,512), new RectF(0.0f,0.0f,1.0f,1.0f),1.0f,1.0f,1.0f,1.0f);
-        /*
         if (press_info[4]) {
             CubeMap[(int)cursor.z][(int)cursor.y][(int)cursor.x] =
                     1 - CubeMap[(int)cursor.z][(int)cursor.y][(int)cursor.x];

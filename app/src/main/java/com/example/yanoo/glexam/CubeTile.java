@@ -25,16 +25,16 @@ public class CubeTile {
 
 
     static public void drawShape(TextureManager tm, TouchListener touchListener, int x, int y, int z, int type, float col) {
-        float tf[] = new float[6*2];
-        float vf[] = new float[6*3];
-        float cf[] = new float[6*4];
-        int   xx,yy,zz;
-        int   tx,ty;
+        float    tf[] = new float[6*2];
+        float    vf[] = new float[6*3];
+        float    cf[] = new float[6*4];
+        int      xx,yy,zz;
+        int      tx,ty;
 
         for (int i = 0; i < 6; i++) {
-            xx = x+(shape_type[type][i] & 1);
-            yy = y+(shape_type[type][i] & 2)/2;
-            zz = z+(shape_type[type][i] & 4)/4;
+            xx = (x+(shape_type[type][i] & 1));
+            yy = (y+(shape_type[type][i] & 2)/2);
+            zz = z+((shape_type[type][i] & 4)/4);
             tf[i*2    ] = 0;
             tf[i*2 + 1] = 0;
 
@@ -43,11 +43,11 @@ public class CubeTile {
             vf[i*3 + 1] = (Util.get2dy(xx,yy,zz) - touchListener.getDragY())* touchListener.getScaleFactor();
             vf[i*3 + 2] = tm.getDepth();
 
-            cf[i*4    ] = shape_color[type][i]/20+ col + (type &1)*0.3f;
-            cf[i*4 + 1] = shape_color[type][i]/20+0.3f + col+ (type & 2)*0.3f/2;
-            cf[i*4 + 2] = shape_color[type][i]/20+col+ (type & 4)*0.3f/4;
-            cf[i*4 + 3] = 1.0f;
+            cf[i*4    ] = shape_color[type][i]/20 + (x / 32.0f)+  (type &1)*0.3f;
+            cf[i*4 + 1] = shape_color[type][i]/20 + (y / 32.0f)+0.3f + (type & 2)*0.3f/2;
+            cf[i*4 + 2] = shape_color[type][i]/20 + (z / 32.0f)+ (type & 4)*0.3f/4;
+            cf[i*4 + 3] = col;
         }
-        tm.addTexture(-1, vf,tf,cf);
+        tm.addTexture(-1, vf, tf, cf);
     }
 }

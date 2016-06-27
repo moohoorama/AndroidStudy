@@ -28,6 +28,9 @@ public class DragTouchListener extends TouchListener {
     public float  getLogX() { return mScroll.x + (mWidth/2)/mScaleFactor;}
     public float  getLogY() { return mScroll.y + (mHeight/2)/mScaleFactor;}
 
+    public float  getClickX() { return mClick.x;}
+    public float  getClickY() { return mClick.y;}
+
     public void press(TouchEvent te) {
         if (te.count == 1) {
             switch (te.phase) {

@@ -19,9 +19,9 @@ import javax.microedition.khronos.opengles.GL10;
  * Created by Yanoo on 2016. 6. 16..
  */
 public class CanvasBitmap {
-    private static final int       FontSize = 24;
-    private static final int       BaseSize = 32;
-    private static final int       TextureSize = 512;
+    private static final int       FontSize = 48;
+    private static final int       BaseSize = 64;
+    private static final int       TextureSize = 1024;
     private TextureManager         tm;
     private Bitmap                 bitmap = Bitmap.createBitmap(TextureSize,TextureSize, Bitmap.Config.ARGB_4444);
     private boolean                useTexture = false;
@@ -56,7 +56,6 @@ public class CanvasBitmap {
     public void  setTexture(GL10 gl, int idx) {
         if (dirty) {
             tm.setTexture(gl,idx,bitmap);
-            Log.i("CanvasBitmap", "draw!");
         }
         dirty      = false;
         useTexture = false;
@@ -85,6 +84,8 @@ public class CanvasBitmap {
         textPaint.setARGB( 0xff, 0xff, 0xff, 0xff );
         textPaint.setTextAlign( Paint.Align.LEFT );
         textPaint.setTypeface(typeface);
+        textPaint.setStrokeWidth(0);
+        textPaint.setStyle(Paint.Style.FILL);
 
         Rect bound = new Rect();
         textPaint.getTextBounds(msg,0,msg.length(), bound);
@@ -99,20 +100,7 @@ public class CanvasBitmap {
             }
         }
         /* left,top쪽 방향으로 조금 오버해서 그릴 수도 있음 */
-        int cc = bitmap.getPixel(2,2);
-        Log.i("CanvasBitmap", String.format("color %d %d %d %d",
-                Color.alpha(cc),
-                Color.red(cc),
-                Color.green(cc),
-                Color.blue(cc)));
         canvas.drawText( msg, x+(-bound.left), y+(-bound.top+bound.bottom), textPaint);
-        cc = bitmap.getPixel(2,2);
-        Log.i("CanvasBitmap", String.format("%d,%d color %d %d %d %d",
-                x,y,
-                Color.alpha(cc),
-                Color.red(cc),
-                Color.green(cc),
-                Color.blue(cc)));
         dirty = true;
 
         RectF ret = new RectF(
@@ -121,7 +109,7 @@ public class CanvasBitmap {
                 (x+bound.right - bound.left)*1.0f/TextureSize,
                 (y + BaseSize)*1.0f/TextureSize);
 
-        x += bound.width();
+        x += bound.width()+2;
         return ret;
     }
 }

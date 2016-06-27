@@ -1,6 +1,7 @@
 package com.example.yanoo.glexam.touch;
 
 import android.graphics.Rect;
+import android.util.Log;
 
 import com.example.yanoo.glexam.graphic.Pos;
 
@@ -22,12 +23,15 @@ public class NormalTouchListener extends TouchListener {
     public float  getLogX() { return mLogical.x;}
     public float  getLogY() { return mLogical.y;}
 
+    public float  getClickX() { return mClick.x;}
+    public float  getClickY() { return mClick.y;}
+
     private float mScaleFactor=1.0f;
 
-    private Pos   mScroll      = new Pos();
+    public  Pos   mScroll      = new Pos();
     private Pos   mClick       = new Pos();
     private Pos   mLogical     = new Pos();
-    private Pos   mPressBegin  = new Pos();
+    public Pos    mPressBegin  = new Pos();
     private float mBeginDistance = 0;
 
     public void press(TouchEvent te) {
@@ -42,24 +46,31 @@ public class NormalTouchListener extends TouchListener {
             }
             mLogical.x = (int)(mScroll.x + (te.pos.x)/mScaleFactor);
             mLogical.y = (int)(mScroll.y + (te.pos.y)/mScaleFactor);
+            mClick.x   = te.pos.x;
+            mClick.y   = te.pos.y;
         } else {
             if (te.count == 3) {
 
             } else {
                 switch (te.phase) {
                     case 0:
+                        mPressBegin.copyFrom(te.pos);
                         break;
                     case 1:
+                        if (mPressBegin.x - te.pos.x + mPressBegin.y - te.pos.y > 10) {
+                            Log.i("Too Far", String.format(
+                                    "%f %f %f %f %d %d", mPressBegin.x,mPressBegin.y,te.pos.x,te.pos.y,te.count,te.phase));
+                        }
                         mScroll.x+=(mPressBegin.x - te.pos.x) / mScaleFactor;
                         mScroll.y+=(mPressBegin.y - te.pos.y) / mScaleFactor;
+                        mPressBegin.copyFrom(te.pos);
                         break;
                     case 2:
                         break;
                 }
                 mBeginDistance=te.distance;
-                mPressBegin.copyFrom(te.pos);
             }
-       }
+        }
     }
 
 }

@@ -19,7 +19,27 @@ import java.util.List;
  * Created by Yanoo on 2016. 5. 29..
  */
 public class Util {
-    static final public int Q_LEN = 15;
+    static final public int Q_LEN = 32;
+
+    /*
+    (x - y)  = xx / (Q_LEN * 4);
+    (x + y)  = yy / (Q_LEN * 2);
+    x = xx / (Q_LEN * 2) + yy/(Q_LEN)
+    y = yy / (Q_LEN) - xx / (Q_LEN*2)
+    */
+    static public int getIsoX(int x, int y) {
+        return (x/2 + y) / (Q_LEN*4);
+    }
+    static public int getIsoY(int x, int y) {
+        return (-x/2 + y) / (Q_LEN*4);
+    }
+
+    static public int get2dx(int x, int y,int z) {
+        return (x - y) * Q_LEN * 4;
+    }
+    static public int get2dy(int x, int y,int z) {
+        return ((x + y)*2+z*4) * Q_LEN;
+    }
 
     static public FloatBuffer setFloatBuffer(float[] src) {
         FloatBuffer dst;
@@ -131,23 +151,24 @@ public class Util {
         return null;
     }
 
+    static public int CubeLen = 32;
     /*
     (x - y)  = xx / (Q_LEN * 4);
     (x + y)  = yy / (Q_LEN * 2);
     x = xx / (Q_LEN * 2) + yy/(Q_LEN)
     y = yy / (Q_LEN) - xx / (Q_LEN*2)
     */
-    static public int getIsoX(int x, int y) {
-        return (x/2 + y) / (Q_LEN*4);
+    static public int ViewToIsoX(int x, int y) {
+        return (x*2 +y)/CubeLen;
     }
-    static public int getIsoY(int x, int y) {
-        return (-x/2 + y) / (Q_LEN*4);
+    static public int ViewToIsoY(int x, int y) {
+        return (-x*2 +y)/CubeLen;
     }
 
-    static public float get2dx(int x, int y,int z) {
-        return (x - y) * Q_LEN * 4;
+    static public int IsoToViewX(int x, int y,int z) {
+        return (x - y) * CubeLen;
     }
-    static public float get2dy(int x, int y,int z) {
-        return ((x + y)*2+z*4) * Q_LEN;
+    static public int IsoToViewY(int x, int y,int z) {
+        return ((x + y)/2+z) * CubeLen;
     }
 }

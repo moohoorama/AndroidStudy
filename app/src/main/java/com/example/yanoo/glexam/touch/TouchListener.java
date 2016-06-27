@@ -1,6 +1,7 @@
 package com.example.yanoo.glexam.touch;
 
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.example.yanoo.glexam.graphic.Pos;
@@ -25,12 +26,13 @@ public abstract class TouchListener {
     };
 
     private TouchEvent cur  = new TouchEvent();
+    private TouchEvent prev = new TouchEvent();
 
     public TouchEvent getTouchEvent() {
         return prev;
     }
 
-    private TouchEvent prev = new TouchEvent();
+    private MotionEvent lastMotionEvent = null;
 
     protected int  mWidth  = 0;
     protected int  mHeight = 0;
@@ -42,6 +44,9 @@ public abstract class TouchListener {
 
     abstract public float  getLogX();
     abstract public float  getLogY();
+
+    abstract public float  getClickX();
+    abstract public float  getClickY();
 
     abstract public void press(TouchEvent te);
 
@@ -115,30 +120,44 @@ public abstract class TouchListener {
     }
 
     public void touch(MotionEvent event) {
-        cur.pos     = getMidPosition(event);
-        cur.distance= getPointerDistance(cur.pos, event);
-        cur.count   = getPointerCount(event);
-        cur.action  = event.getActionMasked();
+        lastMotionEvent = event;
     }
 
     public void act() {
-        cur.phase = -1;
+        if (lastMotionEvent != null) {
+            cur.pos     = getMidPosition(lastMotionEvent);
+            cur.distance= getPointerDistance(cur.pos, lastMotionEvent);
+            cur.count   = getPointerCount(lastMotionEvent);
+            cur.action  = lastMotionEvent.getActionMasked();
+            if (cur.action == MotionEvent.ACTION_UP ||
+                    cur.action == MotionEvent.ACTION_POINTER_UP) {
+                cur.count = 0;
+            }
+        } else {
+            cur.count = 0;
+        }
 
-        if (cur.count > 0) {
-            if (cur.action == MotionEvent.ACTION_DOWN ||
-                    (cur.action & MotionEvent.ACTION_POINTER_DOWN) == MotionEvent.ACTION_POINTER_DOWN) {
-                cur.phase=0;
-            } else if (cur.action == MotionEvent.ACTION_MOVE) {
+        cur.phase = -1;
+        if (cur.count == prev.count) {
+            if (cur.count > 0) {
                 cur.phase=1;
             } else {
-                cur.phase=2;
+                cur.phase = -1;
+            }
+        } else {
+            if (prev.phase == -1 || prev.phase == 2) {
+                if (cur.count == 0 ){
+                    cur.phase = -1;
+                } else {
+                    cur.phase = 0;
+                }
+            } else {
+                cur.phase = 2;
+                cur.count = prev.count;
             }
         }
         press(cur);
 
         prev.copyFrom(cur);
-        if (cur.phase == 2) {
-            cur.count=0;
-        }
     }
 }
