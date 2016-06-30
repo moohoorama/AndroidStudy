@@ -3,14 +3,13 @@ package com.example.yanoo.glexam.graphic;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.opengl.GLUtils;
 import android.util.Log;
 
 import com.example.yanoo.glexam.R;
-import com.example.yanoo.glexam.Stopwatch;
+import com.example.yanoo.glexam.util.Stopwatch;
 import com.example.yanoo.glexam.util.Util;
 
 import java.nio.FloatBuffer;
@@ -232,16 +231,16 @@ public class TextureManager {
                 break;
             case -3:
                 for (i=0; i < pointCount*3; i++) {
-                    colors[i*4+0] = tc.r *  (1.2f - 0.3f*(vertex[i*3]-left)/ (right-left));
-                    colors[i*4+1] = tc.g *  (1.2f - 0.3f*(vertex[i*3]-left)/ (right-left));
-                    colors[i*4+2] = tc.b *  (1.2f - 0.3f*(vertex[i*3]-left)/ (right-left));
+                    colors[i*4+0] = tc.r *  (1.2f - 0.2f*(vertex[i*3]-left)/ (right-left));
+                    colors[i*4+1] = tc.g *  (1.2f - 0.2f*(vertex[i*3]-left)/ (right-left));
+                    colors[i*4+2] = tc.b *  (1.2f - 0.2f*(vertex[i*3]-left)/ (right-left));
                 }
                 break;
             case -4:
                 for (i=0; i < pointCount*3; i++) {
-                    colors[i*4+0] = tc.r *  (1.2f - 0.3f*(vertex[i*3+1]-top)/ (bottom-top));
-                    colors[i*4+1] = tc.g *  (1.2f - 0.3f*(vertex[i*3+1]-top)/ (bottom-top));
-                    colors[i*4+2] = tc.b *  (1.2f - 0.3f*(vertex[i*3+1]-top)/ (bottom-top));
+                    colors[i*4+0] = tc.r *  (1.2f - 0.2f*(vertex[i*3+1]-top)/ (bottom-top));
+                    colors[i*4+1] = tc.g *  (1.2f - 0.2f*(vertex[i*3+1]-top)/ (bottom-top));
+                    colors[i*4+2] = tc.b *  (1.2f - 0.2f*(vertex[i*3+1]-top)/ (bottom-top));
                 }
                 break;
             }
@@ -249,7 +248,6 @@ public class TextureManager {
         }
         this.addTexture(textureIdx, vertex, texture, colors);
     }
-
 
     public boolean addTexture(int idx, float[] vertex, float[] texture, float[] color) {
         if (idx == -1) {

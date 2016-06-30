@@ -66,7 +66,7 @@ public class MainGLSurfaceView extends GLSurfaceView {
     }
 
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        renderer.getGameLogic().getTouchListener().setScreenSize(w,h);
+        renderer.getGameLogic().getTouchListener().setScreenSize(w, h);
     }
 
     public boolean onTouchEvent(final MotionEvent event) {

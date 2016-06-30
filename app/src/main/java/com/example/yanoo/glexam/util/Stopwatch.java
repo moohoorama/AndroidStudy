@@ -1,4 +1,4 @@
-package com.example.yanoo.glexam;
+package com.example.yanoo.glexam.util;
 
 import java.util.ArrayList;
 

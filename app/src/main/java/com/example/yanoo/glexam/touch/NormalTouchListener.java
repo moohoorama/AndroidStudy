@@ -57,10 +57,6 @@ public class NormalTouchListener extends TouchListener {
                         mPressBegin.copyFrom(te.pos);
                         break;
                     case 1:
-                        if (mPressBegin.x - te.pos.x + mPressBegin.y - te.pos.y > 10) {
-                            Log.i("Too Far", String.format(
-                                    "%f %f %f %f %d %d", mPressBegin.x,mPressBegin.y,te.pos.x,te.pos.y,te.count,te.phase));
-                        }
                         mScroll.x+=(mPressBegin.x - te.pos.x) / mScaleFactor;
                         mScroll.y+=(mPressBegin.y - te.pos.y) / mScaleFactor;
                         mPressBegin.copyFrom(te.pos);

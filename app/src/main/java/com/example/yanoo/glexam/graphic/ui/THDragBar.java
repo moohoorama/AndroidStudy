@@ -24,7 +24,6 @@ public class THDragBar implements TUI{
     private Listener tuil;
     private int      choice;
     private String   []option;
-    private boolean  enable = true;
 
     public THDragBar(float left, float top, float size,
                      String []option, Listener tuil) {
@@ -32,9 +31,9 @@ public class THDragBar implements TUI{
             size = 0.1f;
         }
         this.left   = left;
-        this.top    = top;
+        this.top    = top - 0.015f;
         this.right  = left + size;
-        this.bottom = top + 0.05f;
+        this.bottom = top + 0.015f;
         this.option = option;
         this.choice = 0;
         this.tuil   = tuil;
@@ -44,22 +43,20 @@ public class THDragBar implements TUI{
 
         floating = 4;
     }
-    public void        setEnable(boolean enable) {
-        this.enable = enable;
-    }
 
-    public void Draw(TextureManager tm, TouchListener tl) {
+    public void Draw(TextureManager tm, TouchListener tl, boolean enable) {
         TouchListener.TouchEvent te = tl.getTouchEvent();
-        int _left   = (int)(tl.getWidth()*left);
-        int _right  = (int)(tl.getWidth()*right);
-        int _top    = (int)(tl.getHeight()*top);
-        int _bottom = (int)(tl.getHeight()*bottom);
+        int  _left   = (int)(tl.getWidth()*left);
+        int  _right  = (int)(tl.getWidth()*right);
+        int  _top    = (int)(tl.getHeight()*top);
+        int  _bottom = (int)(tl.getHeight()*bottom);
+        int  base_height = (_bottom - _top);
         float curPress = 0;
 
         if (enable) {
             if (_left <= te.pos.x && te.pos.x < _right &&
-                    _top <= te.pos.y && te.pos.y < _bottom &&
-                    te.count == 1) {
+                _top <= te.pos.y && te.pos.y < _bottom &&
+                te.count == 1) {
                 curPress = (te.pos.x - _left)/(_right - _left);
                 choice =
                     (int)(curPress * (option.length-1) + 0.5f);
@@ -68,50 +65,58 @@ public class THDragBar implements TUI{
             tm.addRoundedRectangle(
                     _left, _top,
                     _right, _bottom,
-                    0, (_bottom - _top) / 2,
+                    0, base_height / 2,
                     -4, null,
-                    tc);
+                    tc.Grayscale());
             if (choice != 0) {
                 tm.addRoundedRectangle(
                         _left, _top,
                         _left + choice * (_right - _left) / (option.length - 1), _bottom,
-                        0, (_bottom - _top) / 2,
+                        0, base_height / 2,
                         -4, null,
-                        tc.MultiplyRGB(2));
+                        tc);
             }
+            tm.addRoundedRectangle(
+                    _left + choice * (_right - _left) / (option.length - 1) - base_height/2,
+                    _top - base_height/2,
+                    _left + choice * (_right - _left) / (option.length - 1) + base_height/2,
+                    _bottom + base_height/2,
+                    0, base_height / 2,
+                    -4, null,
+                    tc);
             for (int i = 0; i < option.length; i++) {
                 int baseX = _left + i * (_right-_left)/(option.length-1);
-                int height = _bottom - _top;
+                int height = (int)(tl.getWidth()*0.02);
                 tm.addText(
                         baseX - height/2,
                         _bottom,
                         baseX + height/2,
-                        _bottom+(_bottom-_top),option[i],
+                        _bottom+(height),option[i],
                         fontTc);
             }
         } else {
             tm.addRoundedRectangle(
                     _left, _top,
                     _right, _bottom,
-                    0, (_bottom - _top) / 2,
+                    0, base_height / 2,
                     -4, null,
-                    tc.MultiplyRGB(0.5f));
+                    tc.Grayscale().MultiplyRGB(0.5f));
             if (choice != 0) {
                 tm.addRoundedRectangle(
                         _left, _top,
                         _left + choice * (_right - _left) / (option.length - 1), _bottom,
-                        0, (_bottom - _top) / 2,
+                        0, base_height / 2,
                         -4, null,
                         fontTc.MultiplyRGB(0.5f));
             }
             for (int i = 0; i < option.length; i++) {
                 int baseX = _left + i * (_right-_left)/(option.length-1);
-                int height = _bottom - _top;
+                int height = (int)(tl.getWidth()*0.02);
                 tm.addText(
                         baseX - height/2,
                         _bottom,
                         baseX + height/2,
-                        _bottom+(_bottom-_top),option[i],
+                        _bottom+height,option[i],
                         fontTc.MultiplyRGB(0.5f));
             }
         }

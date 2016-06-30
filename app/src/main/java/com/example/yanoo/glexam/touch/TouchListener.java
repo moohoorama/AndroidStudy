@@ -12,11 +12,18 @@ import com.example.yanoo.glexam.graphic.Pos;
 public abstract class TouchListener {
     public class TouchEvent {
         public Pos   pos = new Pos();
+        public int   multi_x[] = new int[5];
+        public int   multi_y[] = new int[5];
         public float distance;
         public int   count;
         public int   action;
         public int   phase;
         public void copyFrom(TouchEvent te) {
+            int i;
+            for (i=0; i < multi_x.length; i++) {
+                multi_x[i] = te.multi_x[i];
+                multi_y[i] = te.multi_y[i];
+            }
             pos.copyFrom(te.pos);
             distance = te.distance;
             count    = te.count;
@@ -129,8 +136,16 @@ public abstract class TouchListener {
             cur.distance= getPointerDistance(cur.pos, lastMotionEvent);
             cur.count   = getPointerCount(lastMotionEvent);
             cur.action  = lastMotionEvent.getActionMasked();
+
+            for(int i = 0; i < cur.multi_x.length; i++) {
+                if (i < cur.count) {
+                    cur.multi_x[i] = (int)lastMotionEvent.getX(i);
+                    cur.multi_y[i] = (int)lastMotionEvent.getY(i);
+                }
+            }
+
             if (cur.action == MotionEvent.ACTION_UP ||
-                    cur.action == MotionEvent.ACTION_POINTER_UP) {
+                cur.action == MotionEvent.ACTION_POINTER_UP) {
                 cur.count = 0;
             }
         } else {

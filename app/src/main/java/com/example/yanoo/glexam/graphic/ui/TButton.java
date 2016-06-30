@@ -27,7 +27,8 @@ public class TButton implements TUI {
     private Listener tuil;
     private int    prevPress = 0;
     private String msg;
-    private boolean enable = true;
+
+    static final private int ANI_FRAME = 16;
 
     public TButton(float left, float top, float right, float bottom, String msg, Listener tuil) {
         this.left   = left;
@@ -37,16 +38,13 @@ public class TButton implements TUI {
         this.msg    = msg;
         this.tuil   = tuil;
 
-        this.tc     = TColor.BLUE;
+        this.tc     = TColor.LIGHTBLUE;
         this.fontTc = TColor.WHITE;
 
-        floating = 4;
-    }
-    public void        setEnable(boolean enable) {
-        this.enable = enable;
+        floating = ANI_FRAME;
     }
 
-    public void Draw(TextureManager tm, TouchListener tl) {
+    public void Draw(TextureManager tm, TouchListener tl, boolean enable) {
         TouchListener.TouchEvent te = tl.getTouchEvent();
         int _left   = (int)(tl.getWidth()*left);
         int _right  = (int)(tl.getWidth()*right);
@@ -54,6 +52,7 @@ public class TButton implements TUI {
         int _bottom = (int)(tl.getHeight()*bottom);
         int curPress = 0;
         int pressSize = (int)(Math.min((_right-_left),(_bottom-_top)))/8;
+        int actSize = 0;
 
         if (enable) {
             if (_left <= te.pos.x && te.pos.x < _right &&
@@ -73,18 +72,19 @@ public class TButton implements TUI {
                 }
                 floating = 0;
             } else {
-                floating = (pressSize+floating)/2;
+                floating = (ANI_FRAME+floating)/2;
             }
+            actSize = floating*pressSize/ANI_FRAME;
             tm.addRoundedRectangle(
-                    _left + floating, _top + floating,
-                    _right - floating, _bottom - floating,
+                    _left + actSize, _top + actSize,
+                    _right - actSize, _bottom - actSize,
                     0,0,
-                    -2, null,
+                    -1, null,
                     tc);
             if (msg != null) {
                 tm.addText(
-                        _left + floating + pressSize, _top + floating + pressSize,
-                        _right - floating - pressSize, _bottom - floating - pressSize,
+                        _left + actSize + pressSize, _top + actSize + pressSize,
+                        _right - actSize - pressSize, _bottom - actSize - pressSize,
                         msg,
                         fontTc);
             }
@@ -93,7 +93,7 @@ public class TButton implements TUI {
                     _left  + pressSize, _top + pressSize,
                     _right - pressSize, _bottom - pressSize,
                     0,0,
-                    -2, null,
+                    -1, null,
                     tc.MultiplyRGB(0.5f));
             if (msg != null) {
                 tm.addText(
