@@ -1,7 +1,11 @@
 package com.example.yanoo.glexam.util;
 
+import android.database.Cursor;
 import android.graphics.RectF;
+import android.net.Uri;
+import android.provider.OpenableColumns;
 
+import com.example.yanoo.glexam.GLActivity;
 import com.example.yanoo.glexam.MainGLSurfaceView;
 
 import java.io.File;
@@ -19,28 +23,13 @@ import java.util.List;
  * Created by Yanoo on 2016. 5. 29..
  */
 public class Util {
-    static final public int Q_LEN = 32;
-
-    /*
-    (x - y)  = xx / (Q_LEN * 4);
-    (x + y)  = yy / (Q_LEN * 2);
-    x = xx / (Q_LEN * 2) + yy/(Q_LEN)
-    y = yy / (Q_LEN) - xx / (Q_LEN*2)
-    */
-    static public int getIsoX(int x, int y) {
-        return (x/2 + y) / (Q_LEN*4);
+    static public String[] StringNumberArray(int no) {
+        String[] ret = new String[no];
+        for(int i = 0; i < no; i++) {
+            ret[i] = String.format("%d",i);
+        }
+        return ret;
     }
-    static public int getIsoY(int x, int y) {
-        return (-x/2 + y) / (Q_LEN*4);
-    }
-
-    static public int get2dx(int x, int y,int z) {
-        return (x - y) * Q_LEN * 4;
-    }
-    static public int get2dy(int x, int y,int z) {
-        return ((x + y)*2+z*4) * Q_LEN;
-    }
-
     static public FloatBuffer setFloatBuffer(float[] src) {
         FloatBuffer dst;
         ByteBuffer byteBuf = ByteBuffer.allocateDirect(src.length * 4);
@@ -73,7 +62,6 @@ public class Util {
 
         return dst;
     }
-
     static public String getRString(int id) {
         return MainGLSurfaceView.sSingletone.getResources().getString(id);
     }
@@ -151,24 +139,26 @@ public class Util {
         return null;
     }
 
-    static public int CubeLen = 32;
-    /*
-    (x - y)  = xx / (Q_LEN * 4);
-    (x + y)  = yy / (Q_LEN * 2);
-    x = xx / (Q_LEN * 2) + yy/(Q_LEN)
-    y = yy / (Q_LEN) - xx / (Q_LEN*2)
-    */
-    static public int ViewToIsoX(int x, int y) {
-        return (x*2 +y)/CubeLen;
-    }
-    static public int ViewToIsoY(int x, int y) {
-        return (-x*2 +y)/CubeLen;
+    static public String getPathFromURI(Uri uri) {
+        String uriString = uri.toString();
+        File myFile = new File(uriString);
+        String path = myFile.getAbsolutePath();
+        String displayName = null;
+
+        if (uriString.startsWith("content://")) {
+            Cursor cursor = null;
+            try {
+                cursor = GLActivity.singletone.getContentResolver().query(uri, null, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        } else if (uriString.startsWith("file://")) {
+            displayName = myFile.getName();
+        }
+        return displayName;
     }
 
-    static public int IsoToViewX(int x, int y,int z) {
-        return (x - y) * CubeLen;
-    }
-    static public int IsoToViewY(int x, int y,int z) {
-        return ((x + y)/2+z) * CubeLen;
-    }
 }

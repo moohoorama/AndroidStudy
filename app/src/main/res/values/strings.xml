@@ -7,6 +7,7 @@
     <string name="Start">시작하기</string>
     <string name="Setting">설정</string>
     <string name="MapEditor">맵 에디터</string>
+    <string name="TileEditor">타일 에디터</string>
     <string name="Exit">나가기</string>
     <string name="UpStair">위층</string>
     <string name="DownStair">아래층</string>

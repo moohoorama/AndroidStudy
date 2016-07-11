@@ -1,15 +1,22 @@
 package com.example.yanoo.glexam.graphic;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.RectF;
+import android.opengl.GLException;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.util.Log;
 
+import com.example.yanoo.glexam.GLActivity;
+import com.example.yanoo.glexam.util.Sprite;
 import com.example.yanoo.glexam.util.Stopwatch;
 import com.example.yanoo.glexam.game.GameLogic;
 import com.example.yanoo.glexam.game.TitleLogic;
 import com.example.yanoo.glexam.graphic.ui.TUI;
 
+import java.nio.IntBuffer;
 import java.util.Stack;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -25,7 +32,7 @@ public class GLRenderer implements GLSurfaceView.Renderer{
     private int width= 1;
     private int height= 1;
 
-    private static final int GUIDE_FPS = 60;
+    private static final int GUIDE_FPS = 30;
 
     private GameLogic gameLogic = null;
     private GameLogic nextLogic = null;
@@ -38,7 +45,7 @@ public class GLRenderer implements GLSurfaceView.Renderer{
     private long changeTime = 0;
     private long endTime4fps, startTime4fps;
 
-    private static final int changeDuration = 1000; //ms
+    private static final int changeDuration = 400; //ms
 
     public GLRenderer(Context context) {
         singletone= this;
@@ -83,8 +90,8 @@ public class GLRenderer implements GLSurfaceView.Renderer{
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         gl.glShadeModel(GL10.GL_SMOOTH);
         gl.glClearDepthf(1.0f);
-        gl.glEnable(GL10.GL_DEPTH_TEST);
-        gl.glDepthFunc(GL10.GL_LEQUAL);
+        gl.glDisable(GL10.GL_DEPTH_TEST);
+        gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
 
@@ -139,58 +146,87 @@ public class GLRenderer implements GLSurfaceView.Renderer{
         if (!textureManager.isPrepared()) {
             textureManager.init(this,gl);
         }
-        gameLogic.draw(textureManager);
         gameLogic.getTouchListener().act();
+        gameLogic.act(textureManager);
+
+        sw.event("act");
+
+        RectF screenRect = new RectF(0, 0,
+                gameLogic.getTouchListener().getWidth(), gameLogic.getTouchListener().getHeight());
 
         Stack<TUI[]>  stack4draw = (Stack<TUI[]>)TUIStack.clone();
         for (int i = 0; i < stack4draw.size(); i++) {
             for (TUI tui : stack4draw.get(i)) {
                 tui.Draw(textureManager, gameLogic.getTouchListener(), i == stack4draw.size()-1);
             }
-            if (i == stack4draw.size()-2) {
-                /* active stack */
+            if (i == stack4draw.size()-2) {/* is active stack */
                 if (stackPushTime > curTime) {
-                    textureManager.addTextureRect(-1,
-                            new RectF(0, 0,
-                                    gameLogic.getTouchListener().getWidth(), gameLogic.getTouchListener().getHeight()),
-                            null,
+                    textureManager.addTextureRect(-1, screenRect, null,
                             new TColor(0.0f,0.0f,0.0f,0.5f - (float)(stackPushTime-curTime)/changeDuration));
                 } else {
-                    textureManager.addTextureRect(-1,
-                            new RectF(0, 0,
-                                    gameLogic.getTouchListener().getWidth(), gameLogic.getTouchListener().getHeight()),
-                            null,
+                    textureManager.addTextureRect(-1, screenRect, null,
                             new TColor(0.0f,0.0f,0.0f,0.5f));
                 }
             }
         }
+        sw.event("drawUI");
         if (changeTime > curTime) {
-            textureManager.addTextureRect(-1,
-                    new RectF(0, 0,
-                            gameLogic.getTouchListener().getWidth(), gameLogic.getTouchListener().getHeight()),
+            textureManager.addTextureRect(-1, screenRect,
                     null,
                     new TColor(0.0f,0.0f,0.0f,1.0f - (float)(changeTime-curTime)/changeDuration));
         } else if (changeTime + changeDuration > curTime) {
-            textureManager.addTextureRect(-1,
-                    new RectF(0, 0,
-                            gameLogic.getTouchListener().getWidth(), gameLogic.getTouchListener().getHeight()),
+            textureManager.addTextureRect(-1, screenRect,
                     null,
                     new TColor(0.0f,0.0f,0.0f,1.0f - (float)(curTime-changeTime)/changeDuration));
         }
+        sw.event("Fade");
 
-        textureManager.addTextureRect(-1,
-                new RectF(0, 0,
-                        gameLogic.getTouchListener().getWidth(), gameLogic.getTouchListener().getHeight()/2),
-                null,
-                new TColor(0.0f,0.0f,0.0f,0.0f));
-        textureManager.addTextureRect(0,
-                new RectF(0.0f,0.0f,gameLogic.getTouchListener().getWidth(),gameLogic.getTouchListener().getHeight()),
-                new RectF(0.0f,0.0f,1.0f,1.0f),
+        gameLogic.draw(gl, textureManager);
+        sw.event("logic draw");
+
+        /*
+        textureManager.addTextureRect(1,
+                new RectF(0.0f,0.0f,gameLogic.getTouchListener().getHeight(),gameLogic.getTouchListener().getHeight()),
+//                Sprite.TILE_OBJECT[0].getRectF(),
+                Sprite.TILE_TEXTURE[4].getRectF(),
                 TColor.WHITE);
-        sw.event("act");
+        textureManager.addTextureRect(1,
+                new RectF(0.0f,0.0f,256,256),
+//                Sprite.TILE_OBJECT[0].getRectF(),
+                Sprite.TILE_TEXTURE[4].getRectF(),
+                TColor.WHITE);
+                */
         textureManager.draw(this, gl, width, height);
 
         sw.event("draw");
-        Log.d("draw", sw.toString());
+        Log.i("draw", sw.toString());
+    }
+
+    private Bitmap createBitmapFromGLSurface(int x, int y, int w, int h, GL10 gl)
+            throws OutOfMemoryError {
+        int bitmapBuffer[] = new int[w * h];
+        int bitmapSource[] = new int[w * h];
+        IntBuffer intBuffer = IntBuffer.wrap(bitmapBuffer);
+        intBuffer.position(0);
+
+        try {
+            gl.glReadPixels(x, y, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, intBuffer);
+            int offset1, offset2;
+            for (int i = 0; i < h; i++) {
+                offset1 = i * w;
+                offset2 = (h - i - 1) * w;
+                for (int j = 0; j < w; j++) {
+                    int texturePixel = bitmapBuffer[offset1 + j];
+                    int blue = (texturePixel >> 16) & 0xff;
+                    int red = (texturePixel << 16) & 0x00ff0000;
+                    int pixel = (texturePixel & 0xff00ff00) | red | blue;
+                    bitmapSource[offset2 + j] = pixel;
+                }
+            }
+        } catch (GLException e) {
+            return null;
+        }
+
+        return Bitmap.createBitmap(bitmapSource, w, h, Bitmap.Config.ARGB_8888);
     }
 }

@@ -12,8 +12,11 @@ import com.example.yanoo.glexam.R;
 import com.example.yanoo.glexam.util.Stopwatch;
 import com.example.yanoo.glexam.util.Util;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -26,15 +29,22 @@ public class TextureManager {
     private Typeface     typeface;
     private CanvasBitmap canvasBitmap;
 
-    private int[]    bitmapIds = {-1, R.drawable.baby2, R.drawable.baby3, R.drawable.baby4}; /* -1은 최상단 CanvasBitmap */
+    private static final int CANVAS_BITMAP = -1;
+    private static final int NULL_BITMAP = -2;
+
+    public static final int  CANVAS_IDX = 0;
+    public static final int  MINIMAP_IDX = 2;
+
+    private int[]    bitmapIds = {CANVAS_BITMAP, R.drawable.tile_texture, NULL_BITMAP, NULL_BITMAP}; /* -1은 최상단 CanvasBitmap */
     private int[]    glTexture = new int[bitmapIds.length];
 
     private int      runSequence = 0;
     private float    depth = 0.0f;
 
-    private ArrayList<float[]>[] mVertexList;
-    private ArrayList<float[]>[] mTextureList;
-    private ArrayList<float[]>[] mColorList;
+    private LinkedList<float[]> mVertexList;
+    private LinkedList<float[]> mTextureList;
+    private LinkedList<float[]> mColorList;
+    private LinkedList<Integer>  mBitmapList;
 
     public float    getDepth(){return depth;}
     public Typeface getTypeface(){return typeface;}
@@ -44,9 +54,10 @@ public class TextureManager {
     public TextureManager(Context _context) {
         context = _context;
         typeface = Typeface.createFromAsset(context.getAssets(), "fonts/NanumBarunGothic.ttf");
-        mVertexList=new ArrayList[bitmapIds.length+1];
-        mTextureList=new ArrayList[bitmapIds.length+1];
-        mColorList=new ArrayList[bitmapIds.length+1];
+        mVertexList  = new LinkedList<float[]>();
+        mTextureList = new LinkedList<float[]>();
+        mColorList   = new LinkedList<float[]>();
+        mBitmapList  = new LinkedList<Integer>();
         canvasBitmap = new CanvasBitmap(this);
     }
 
@@ -60,19 +71,18 @@ public class TextureManager {
         gl.glGenTextures(glTexture.length, glTexture, 0);
 
         for (int idx = 0; idx < bitmapIds.length; idx++) {
-            if (bitmapIds[idx] == -1) {
-                bitmaps[idx] =
-                    canvasBitmap.getBitmap();
+            if (bitmapIds[idx] < 0) {
+                if (bitmapIds[idx] == CANVAS_BITMAP) {
+                    bitmaps[idx] = canvasBitmap.getBitmap();
+                    canvasBitmap.setTextureIdx(idx);
+                } else if (bitmapIds[idx] == NULL_BITMAP) {
+
+                }
             } else {
                 bitmaps[idx] = BitmapFactory.decodeResource(context.getResources(), bitmapIds[idx]);
-                setTexture(gl, glTexture[idx], bitmaps[idx]);
+                setTexture(gl, idx, bitmaps[idx], true /*quality*/);
                 bitmaps[idx].recycle();
             }
-        }
-        for (int idx = 0; idx <= bitmapIds.length; idx++) {
-            mVertexList[idx]  =new ArrayList<float[]>();
-            mTextureList[idx] =new ArrayList<float[]>();
-            mColorList[idx]   =new ArrayList<float[]>();
         }
         depth = -0.001f;
     }
@@ -80,12 +90,12 @@ public class TextureManager {
     public void refresh(GL10 gl) {
         Bitmap   bitmaps[] = new Bitmap[bitmapIds.length];
 
+        canvasBitmap.refresh();
+
         for (int idx = 0; idx < bitmapIds.length; idx++) {
-            if (bitmapIds[idx] == -1) {
-                canvasBitmap.refresh();
-            } else {
+            if (bitmapIds[idx] >= 0) {
                 bitmaps[idx] = BitmapFactory.decodeResource(context.getResources(), bitmapIds[idx]);
-                setTexture(gl, glTexture[idx], bitmaps[idx]);
+                setTexture(gl, idx, bitmaps[idx], true/*quality*/);
                 bitmaps[idx].recycle();
             }
         }
@@ -118,17 +128,17 @@ public class TextureManager {
                 top+=pad;
                 bottom-=pad;
             }
-            addTextureRect(0, new RectF(left, top, right, bottom), texture, tc);
+            addTextureRect(CANVAS_IDX, new RectF(left, top, right, bottom), texture, tc);
         } else {
             left = (int)((left+right)/2 - estimatedWidth/2);
             top  = (int)((top+bottom)/2 - size/2);
 
-            addTextureRect(0, new RectF(left, top, left+estimatedWidth, top+size), texture, tc);
+            addTextureRect(CANVAS_IDX, new RectF(left, top, left+estimatedWidth, top+size), texture, tc);
         }
         return true;
     }
     public boolean addTextureLine(int idx, RectF vertex, RectF texture, float thickness, TColor tc) {
-        float[] tf = dot4To6Point(2, texture);
+        float[] tf = dot4To4Point(texture);
         float[] cf = rgbToPoint(tc,6);
         float   x = 1;
         float   y = 1;
@@ -154,8 +164,8 @@ public class TextureManager {
         return addTexture(idx, vf, tf, cf);
     }
     public boolean addTextureRect(int idx, RectF vertex, RectF texture, TColor tc) {
-        float[] vf = dot4To6Point(3, vertex);
-        float[] tf = dot4To6Point(2, texture);
+        float[] vf = dot4To6Point(vertex);
+        float[] tf = dot4To4Point(texture);
         float[] cf = rgbToPoint(tc,6);
         return addTexture(idx, vf, tf, cf);
     }
@@ -249,34 +259,55 @@ public class TextureManager {
         this.addTexture(textureIdx, vertex, texture, colors);
     }
 
-    public boolean addTexture(int idx, float[] vertex, float[] texture, float[] color) {
-        if (idx == -1) {
-            idx = bitmapIds.length;
-        }
-        if (idx < 0 || idx > bitmapIds.length || !isPrepared()) {
-            return false;
-        }
-
-        mVertexList[idx].add(vertex);
-        if (texture != null) {
-            mTextureList[idx].add(texture);
-        }
-        mColorList[idx].add(color);
-
-        depth -= 0.0001;
-        return true;
-    }
-
-    public void setTexture(GL10 gl, int id, Bitmap bitmap) {
+    public void setTexture(GL10 gl, int idx, Bitmap bitmap, boolean neat) {
+        int id = glTexture[idx];
         gl.glBindTexture(GL10.GL_TEXTURE_2D, id);
-        gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-        gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+
+        if (neat) {
+            gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
+            gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+            int[] pixels = extractPixels(bitmap);
+            byte[] pixelComponents = new byte[pixels.length * 4];
+            int byteIndex = 0;
+            for (int i = 0; i < pixels.length; i++) {
+                int p = pixels[i];
+                // Convert to byte representation RGBA required by gl.glTexImage2D.
+                // We don't use intbuffer, because then we
+                // would be relying on the intbuffer wrapping to write the ints in
+                // big-endian format, which means it would work for the wrong
+                // reasons, and it might brake on some hardware.
+                pixelComponents[byteIndex++] = (byte) ((p >> 16) & 0xFF); // red
+                pixelComponents[byteIndex++] = (byte) ((p >> 8) & 0xFF); //  green
+                pixelComponents[byteIndex++] = (byte) ((p) & 0xFF); // blue
+                pixelComponents[byteIndex++] = (byte) (p >> 24);  // alpha
+            }
+            ByteBuffer pixelBuffer = ByteBuffer.wrap(pixelComponents);
+
+            gl.glTexImage2D(GL10.GL_TEXTURE_2D, 0, GL10.GL_RGBA,
+                    bitmap.getWidth(), bitmap.getHeight(), 0, GL10.GL_RGBA,
+                    GL10.GL_UNSIGNED_BYTE, pixelBuffer);
+        } else {
+            gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+            gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+        }
+
     }
-    public float[] rgbToPoint(TColor tc, int count) {
+
+    public static int[] extractPixels(Bitmap src) {
+        int x = 0;
+        int y = 0;
+        int w = src.getWidth();
+        int h = src.getHeight();
+        int[] colors = new int[w * h];
+        src.getPixels(colors, 0, w, x, y, w, h);
+        return colors;
+    }
+
+    static public float[] rgbToPoint(TColor tc, int count) {
         return rgbToPoint(tc.r,tc.g,tc.b,tc.a,count);
     }
-    public float[] rgbToPoint(float r, float g, float b, float a, int count) {
+    static public float[] rgbToPoint(float r, float g, float b, float a, int count) {
         float[] cf = new float[count*4];
         for (int i = 0; i < count; i++) {
             cf[i*4  ] = r;
@@ -286,20 +317,9 @@ public class TextureManager {
         };
         return cf;
     }
-    public float[] dot4To6Point(int p_level, RectF rect) {
+    public float[] dot4To6Point(RectF rect) {
         if (rect == null) {
             return null;
-        }
-        if (p_level == 2) {
-            float []ret = {
-                    rect.left,  rect.bottom,
-                    rect.left,  rect.top,
-                    rect.right, rect.bottom,
-                    rect.right, rect.bottom,
-                    rect.left,  rect.top,
-                    rect.right, rect.top,
-            };
-            return ret;
         }
         float []ret = {
                 rect.left,  rect.bottom, depth,
@@ -312,9 +332,89 @@ public class TextureManager {
 
         return ret;
     }
+    static public float[] dot4To4Point(RectF rect) {
+        if (rect == null) {
+            return null;
+        }
+        float []ret = {
+                rect.left,  rect.bottom,
+                rect.left,  rect.top,
+                rect.right, rect.bottom,
+                rect.right, rect.bottom,
+                rect.left,  rect.top,
+                rect.right, rect.top,
+        };
+        return ret;
+    }
+
+    public boolean addTexture(int idx, float[] vertex, float[] texture, float[] color) {
+        if (idx == -1) {
+            idx = CANVAS_IDX;
+
+            float[] model = canvasBitmap.getWhite();
+            texture = new float[vertex.length/3*2];
+            for (int i = 0; i < texture.length; i++) {
+                texture[i] = model[i % model.length];
+            }
+        }
+        if (idx < 0 || idx > bitmapIds.length || !isPrepared()) {
+            return false;
+        }
+
+        mVertexList.add(vertex);
+        mColorList.add(color);
+        mTextureList.add(texture);
+        mBitmapList.add(idx);
+
+        depth -= 0.0001;
+        return true;
+    }
+
+    private void drawArray(GLRenderer renderer, GL10 gl, LinkedList<float[]> vl, LinkedList<float[]> tl, LinkedList<float[]> cl, int idx) {
+        FloatBuffer vb, tb, cb;
+        int texture_idx;
+
+        if (vl.size() == 0) {
+            return;
+        }
+        if (vl.size() != tl.size() ||
+            vl.size() != cl.size()) {
+            return;
+        }
+
+        if (idx < 0 || idx >= bitmapIds.length) {
+            texture_idx = -1;
+            gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+            gl.glDisable(GL10.GL_TEXTURE_2D);
+        } else {
+            texture_idx=glTexture[idx];
+
+            tb = Util.setFloatBufferFromList(tl);
+            gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, tb);
+        }
+
+        vb = Util.setFloatBufferFromList(vl);
+        cb = Util.setFloatBufferFromList(cl);
+
+        gl.glBindTexture(GL10.GL_TEXTURE_2D, texture_idx);
+
+        gl.glVertexPointer  (3, GL10.GL_FLOAT, 0, vb);
+        gl.glColorPointer   (4, GL10.GL_FLOAT, 0, cb);
+
+        gl.glDrawArrays(GL10.GL_TRIANGLES, 0, vb.capacity() / 3);
+
+        if (texture_idx == -1) {
+            gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+            gl.glEnable(GL10.GL_TEXTURE_2D);
+
+        }
+    }
 
     public void draw(GLRenderer renderer, GL10 gl, int width, int height) {
         int  texture_idx = -1;
+        int  prev_idx    = -2;
+        int  drawArrayCount = 0;
+
         Stopwatch stopwatch = new Stopwatch();
 
         if (!isPrepared()) {
@@ -322,53 +422,49 @@ public class TextureManager {
         }
         stopwatch.event("init");
 
-        for (int idx = bitmapIds.length; idx >= 0; idx--) {
-            FloatBuffer vb, tb, cb;
+        canvasBitmap.setTexture(gl);
 
-            if (mVertexList[idx].size() <= 0) {
-                continue;
+        assert(mVertexList.size() == mTextureList.size());
+        assert(mVertexList.size() == mColorList.size());
+        assert(mVertexList.size() == mBitmapList.size());
+
+        Iterator<float[]> vi = mVertexList.iterator();
+        Iterator<float[]> ti = mTextureList.iterator();
+        Iterator<float[]> ci = mColorList.iterator();
+        Iterator<Integer> bi = mBitmapList.iterator();
+
+        LinkedList<float[]> tempVL = new LinkedList<>();
+        LinkedList<float[]> tempTL = new LinkedList<>();
+        LinkedList<float[]> tempCL = new LinkedList<>();
+
+        while(bi.hasNext() && vi.hasNext() && ti.hasNext() && ci.hasNext()) {
+            int idx = bi.next();
+
+            if (idx != prev_idx) {
+                drawArray(renderer,gl,tempVL,tempTL,tempCL,prev_idx);
+                tempVL.clear();
+                tempTL.clear();
+                tempCL.clear();
+                drawArrayCount ++;
+                stopwatch.event("draw");
             }
+            prev_idx = idx;
 
-            if (idx == bitmapIds.length) { /* null texture */
-//                vb = Util.setFloatBuffer(dot4To6Point(3, new RectF(0.0f,0.0f,height,height)));
-//                tb = Util.setFloatBuffer(dot4To6Point(2, new RectF(0.0f,0.0f,1.0f,1.0f)));
-//                cb = Util.setFloatBuffer(rgbToPoint(1.0f,1.0f,1.0f,1.0f, 6));
-                texture_idx = -1;
-            } else {
-                if (bitmapIds[idx] == -1) {
-                    canvasBitmap.setTexture(gl, glTexture[idx]);
-                }
-                texture_idx=glTexture[idx];
-            }
-            vb = Util.setFloatBufferFromList(mVertexList[idx]);
-            tb = Util.setFloatBufferFromList(mTextureList[idx]);
-            cb = Util.setFloatBufferFromList(mColorList[idx]);
-            mVertexList[idx].clear();
-            mTextureList[idx].clear();
-            mColorList[idx].clear();
-            stopwatch.event(String.format("Prepare %d", idx));
-
-            if (texture_idx == -1) {
-                gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-                gl.glDisable(GL10.GL_TEXTURE_2D);
-            } else {
-                gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, tb);
-            }
-            gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-            gl.glBindTexture(GL10.GL_TEXTURE_2D, texture_idx);
-            gl.glVertexPointer  (3, GL10.GL_FLOAT, 0, vb);
-            gl.glColorPointer   (4, GL10.GL_FLOAT, 0, cb);
-
-            gl.glDrawArrays(GL10.GL_TRIANGLES, 0, vb.capacity() / 3);
-
-            if (texture_idx == -1) {
-                gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-                gl.glEnable(GL10.GL_TEXTURE_2D);
-            }
-            stopwatch.event(String.format("draw %d", idx));
+            tempVL.add(vi.next());
+            tempTL.add(ti.next());
+            tempCL.add(ci.next());
         }
+
+        drawArray(renderer,gl,tempVL,tempTL,tempCL,prev_idx);
+        drawArrayCount ++;
+
+        mVertexList.clear();
+        mTextureList.clear();
+        mColorList.clear();
+        mBitmapList.clear();
+
         depth = -0.0001f;
-        Log.d("stopwatch", stopwatch.toString());
+        Log.i("stopwatch", stopwatch.toString() + String.format("DrawArrayCount %d", drawArrayCount));
         runSequence++;
     }
 }

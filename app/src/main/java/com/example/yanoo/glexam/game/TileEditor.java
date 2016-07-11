@@ -1,22 +1,16 @@
 package com.example.yanoo.glexam.game;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.RectF;
-import android.util.Log;
-
-import com.example.yanoo.glexam.GLActivity;
 import com.example.yanoo.glexam.R;
-import com.example.yanoo.glexam.graphic.PosI;
-import com.example.yanoo.glexam.graphic.ui.TIsoMap;
 import com.example.yanoo.glexam.graphic.GLRenderer;
+import com.example.yanoo.glexam.graphic.PosI;
 import com.example.yanoo.glexam.graphic.TColor;
+import com.example.yanoo.glexam.graphic.TextureManager;
 import com.example.yanoo.glexam.graphic.ui.TButton;
 import com.example.yanoo.glexam.graphic.ui.THDragBar;
+import com.example.yanoo.glexam.graphic.ui.TIsoTile;
 import com.example.yanoo.glexam.graphic.ui.TPanel;
 import com.example.yanoo.glexam.graphic.ui.TSelectBox;
 import com.example.yanoo.glexam.graphic.ui.TUI;
-import com.example.yanoo.glexam.graphic.TextureManager;
 import com.example.yanoo.glexam.touch.NormalTouchListener;
 import com.example.yanoo.glexam.touch.TouchListener;
 import com.example.yanoo.glexam.util.Util;
@@ -28,7 +22,7 @@ import javax.microedition.khronos.opengles.GL10;
 /** map editor
  * Created by Yanoo on 2016. 6. 7..
  */
-public class MapEditor implements GameLogic {
+public class TileEditor implements GameLogic {
     private NormalTouchListener   mTouchListener= new NormalTouchListener(0,0);
 
     @Override
@@ -36,18 +30,16 @@ public class MapEditor implements GameLogic {
         return mTouchListener;
     }
 
-    private int     newMapX  = 24;
-    private int     newMapY  = 24;
-    private TIsoMap tMap= new TIsoMap(24,24,1);
-    private int     brush = 0;
-    private String  map_name = "0";
-    private Boolean getTexture = false;
+    private int      newMapX  = 24;
+    private int      newMapY  = 24;
+    private TIsoTile tMap= new TIsoTile(24,24);
+    private int      brush = 0;
 
     public void          registUI(final GLRenderer renderer) {
         LinkedList<TUI> list = new LinkedList<TUI>();
         list.add(tMap);
         list.add(new TPanel(0.8f, 0.0f, 1.0f, 1.0f, ""));
-        list.add(new TSelectBox(0.8f, 0.0f, 1.0f, 0.6f, tMap.getTileModelNames(), new TSelectBox.Listener() {
+        list.add(new TSelectBox(0.8f, 0.0f, 1.0f, 0.6f, new String[] {"높이기","낮추기"}, new TSelectBox.Listener() {
             @Override
             public void press(int idx, String value) {
                 brush = idx;
@@ -98,33 +90,7 @@ public class MapEditor implements GameLogic {
                     public void press(TouchListener.TouchEvent tl) {
                     }
                     public void depress(TouchListener.TouchEvent tl) {
-                        map_name = "0.map";
-                        renderer.pushUI(new TUI[] {
-                                new TPanel(0.1f, 0.1f, 0.8f, 0.8f, ""),
-                                new TSelectBox(0.2f,0.2f,0.5f,0.7f,Util.StringNumberArray(30),new TSelectBox.Listener() {
-
-                                    @Override
-                                    public void press(int idx, String value) {
-                                        map_name = value + ".map";
-                                        tMap.load(map_name);
-                                        getTexture = false;
-                                    }
-                                }),
-                                new TButton(0.7f, 0.6f, 0.8f, 0.7f,Util.getRString(R.string.Load), new TButton.Listener() {
-                                    public void press(TouchListener.TouchEvent tl) {
-                                    }
-                                    public void depress(TouchListener.TouchEvent tl) {
-                                        tMap.load(map_name);
-                                        getTexture = false;
-                                        renderer.popUI();
-                                    }}),
-                                new TButton(0.7f, 0.7f, 0.8f, 0.8f,Util.getRString(R.string.Exit), new TButton.Listener() {
-                                    public void press(TouchListener.TouchEvent tl) {
-                                    }
-                                    public void depress(TouchListener.TouchEvent tl) {
-                                        renderer.popUI();
-                                    }})
-                        });
+                        tMap.load("tile.json");
                     }
                 })
         );
@@ -133,30 +99,7 @@ public class MapEditor implements GameLogic {
                     public void press(TouchListener.TouchEvent tl) {
                     }
                     public void depress(TouchListener.TouchEvent tl) {
-                        map_name = "0";
-                        renderer.pushUI(new TUI[] {
-                                new TPanel(0.1f, 0.1f, 0.8f, 0.8f, ""),
-                                new TSelectBox(0.2f,0.2f,0.7f,0.6f,Util.StringNumberArray(30),new TSelectBox.Listener() {
-
-                                    @Override
-                                    public void press(int idx, String value) {
-                                        map_name = value;
-                                    }
-                                }),
-                                new TButton(0.6f, 0.7f, 0.7f, 0.8f,Util.getRString(R.string.Save), new TButton.Listener() {
-                                    public void press(TouchListener.TouchEvent tl) {
-                                    }
-                                    public void depress(TouchListener.TouchEvent tl) {
-                                        tMap.save(map_name+".map");
-                                        renderer.popUI();
-                                    }}),
-                                new TButton(0.7f, 0.7f, 0.8f, 0.8f,Util.getRString(R.string.Exit), new TButton.Listener() {
-                                    public void press(TouchListener.TouchEvent tl) {
-                                    }
-                                    public void depress(TouchListener.TouchEvent tl) {
-                                        renderer.popUI();
-                                    }})
-                        });
+                        tMap.save("tile.json");
                     }
                 })
         );
@@ -172,7 +115,7 @@ public class MapEditor implements GameLogic {
         renderer.pushUI((TUI[])list.toArray(new TUI[list.size()]));
     }
 
-    public MapEditor() {
+    public TileEditor() {
     }
 
     public void act(TextureManager tm) {
@@ -189,24 +132,14 @@ public class MapEditor implements GameLogic {
         }
         PosI click = tMap.getClick();
         if (click != null) {
-            tMap.setBrush(click.x,click.y,brush);
+//            tMap.setBrush(click.x,click.y,brush);
+            tMap.setBrush(click.x, click.y, brush);
         }
-
-
-        if (!getTexture) {
-            tMap.makeMinimap(gl, tm, tm.MINIMAP_IDX);
-            getTexture = true;
-        }
-
-        tm.addTextureRect(tm.MINIMAP_IDX,
-                new RectF(0.0f,0.0f,256,256),
-                new RectF(0.0f,0.0f,1.0f,1.0f),
-                TColor.WHITE);
-
-        tm.addText(0,0,100,100,
+        /*
+        tm.addText(0,0,500,500,
                 String.format("%d fps",
                         prevFPS),
-                TColor.WHITE);
+                TColor.WHITE);*/
         frame ++;
     }
     private static int  frame = 0;

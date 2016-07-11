@@ -9,17 +9,28 @@ public class TColor {
     public float b;
     public float a;
 
+    public TColor(int r, int g, int b) {
+        set(r/256.0f,g/256.0f,b/256.0f,1.0f);
+    }
     public TColor(float r, float g, float b) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = 1.0f;
+        set(r,g,b,1.0f);
     }
     public TColor(float r, float g, float b, float a) {
+        set(r,g,b,a);
+    }
+    public void set(float r, float g, float b, float a) {
         this.r = r;
         this.g = g;
         this.b = b;
         this.a = a;
+    }
+
+    public int    getInt() {
+        return
+                (((int)(a*255)) << 24) |
+            (((int)(r*255)) << 16) |
+            (((int)(g*255)) <<  8) |
+            (((int)(b*255)) <<  0);
     }
 
     public TColor Grayscale() {
@@ -30,10 +41,15 @@ public class TColor {
     public TColor MultiplyRGB(float v) {
         return new TColor(this.r*v,this.g*v,this.b*v,this.a);
     }
+    public TColor MultiplyA(float v) {
+        return new TColor(this.r,this.g,this.b,this.a*v);
+    }
 
     public static final TColor WHITE  = new TColor(1.0f,1.0f,1.0f);
     public static final TColor BLACK  = new TColor(0,0,0);
     public static final TColor TRANSPARENT  = new TColor(0,0,0,0);
+
+    public static final TColor GRASS  = new TColor(23,119,25);
 
     public static final TColor RED    = new TColor(244/256.0f,67/256.0f,54/256.0f,1.0f);
     public static final TColor PINK   = new TColor(233/256.0f,30/256.0f,99/256.0f,1.0f);

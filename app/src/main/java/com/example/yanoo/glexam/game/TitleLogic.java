@@ -15,6 +15,8 @@ import com.example.yanoo.glexam.util.Util;
 
 import java.io.StringWriter;
 
+import javax.microedition.khronos.opengles.GL10;
+
 /**
  * Created by Yanoo on 2016. 6. 18..
  */
@@ -57,12 +59,19 @@ public class TitleLogic implements GameLogic {
                 public void depress(TouchListener.TouchEvent tl) {}
             }),
                     new TButton(0.1f, 0.4f, 0.9f, 0.5f, Util.getRString(R.string.MapEditor),  new TButton.Listener() {
-                @Override
-                public void press(TouchListener.TouchEvent tl) {
-                    renderer.reserveNextGameLogic(new MapEditor());
-                }
-                public void depress(TouchListener.TouchEvent tl) {}
-            }),
+                        @Override
+                        public void press(TouchListener.TouchEvent tl) {
+                            renderer.reserveNextGameLogic(new MapEditor());
+                        }
+                        public void depress(TouchListener.TouchEvent tl) {}
+                    }),
+                new TButton(0.1f, 0.5f, 0.9f, 0.6f, Util.getRString(R.string.TileEditor),  new TButton.Listener() {
+                    @Override
+                    public void press(TouchListener.TouchEvent tl) {
+                        renderer.reserveNextGameLogic(new TileEditor());
+                    }
+                    public void depress(TouchListener.TouchEvent tl) {}
+                }),
                     new TButton(0.1f, 0.8f, 0.9f, 0.9f, Util.getRString(R.string.Exit),  new TButton.Listener() {
                 @Override
                 public void press(TouchListener.TouchEvent tl) {
@@ -78,7 +87,10 @@ public class TitleLogic implements GameLogic {
         return touchListener;
     }
 
+    public void act(TextureManager tm) {
+    }
+
     @Override
-    public void draw(TextureManager tm) {
+    public void draw(GL10 gl, TextureManager tm) {
     }
 }
